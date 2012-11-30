@@ -40,18 +40,18 @@ class MySqlTest extends \lithium\test\Unit {
 
 	public function testBuildColumn() {
 		$data = array(
-			'name' => 'testName',
+			'name' => 'fieldname',
 			'type' => 'string',
 			'length' => 32,
 			'null' => true,
 			'comment' => 'test'
 		);
 		$result = $this->dbmock->buildColumn($data);
-		$expected = '`testName` varchar(32) DEFAULT NULL COMMENT \'test\'';
+		$expected = '`fieldname` varchar(32) DEFAULT NULL COMMENT \'test\'';
 		$this->assertEqual($expected, $result);
 
 		$data = array(
-			'name' => 'testName',
+			'name' => 'fieldname',
 			'type' => 'string',
 			'length' => 32,
 			'null' => false,
@@ -59,21 +59,39 @@ class MySqlTest extends \lithium\test\Unit {
 			'collate' => 'utf8_unicode_ci'
 		);
 		$result = $this->dbmock->buildColumn($data);
-		$expected = '`testName` varchar(32) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL';
+		$expected = '`fieldname` varchar(32) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL';
 		$this->assertEqual($expected, $result);
 
 		$data = array(
-			'name' => 'testName',
+			'name' => 'fieldname',
 			'type' => 'float',
 			'length' => 10,
 			'precision' => 2
 		);
 		$result = $this->dbmock->buildColumn($data);
-		$expected = "`testName` decimal(10,2)";
+		$expected = "`fieldname` decimal(10,2)";
+		$this->assertEqual($expected, $result);
+
+		$data = array(
+			'name' => 'fieldname',
+			'type' => 'text',
+			'default' => 'value'
+		);
+		$result = $this->dbmock->buildColumn($data);
+		$expected = "`fieldname` text DEFAULT 'value'";
+		$this->assertEqual($expected, $result);
+
+		$data = array(
+			'name' => 'fieldname',
+			'type' => 'text',
+			'default' => null
+		);
+		$result = $this->dbmock->buildColumn($data);
+		$expected = "`fieldname` text";
 		$this->assertEqual($expected, $result);
 	}
 
-	public function testBuildColumnTime() {
+	public function testBuildTimeColumn() {
 		$data = array(
 			'name' => 'created',
 			'type' => 'datetime',
@@ -82,7 +100,7 @@ class MySqlTest extends \lithium\test\Unit {
  		);
 
 		$result = $this->dbmock->buildColumn($data);
-		$expected = '`created` datetime DEFAULT CURRENT_TIMESTAMP NOT NULL';
+		$expected = '`created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP';
 		$this->assertEqual($expected, $result);
 
 		$data = array(
@@ -117,29 +135,48 @@ class MySqlTest extends \lithium\test\Unit {
 
 	public function testBuildColumnCast() {
 		$data = array(
-			'name' => 'testName',
+			'name' => 'fieldname',
 			'type' => 'integer',
 			'length' => 11,
 			'default' => 1
 		);
 		$result = $this->dbmock->buildColumn($data);
-		$expected = "`testName` int(11) DEFAULT 1";
+		$expected = "`fieldname` int(11) DEFAULT 1";
 		$this->assertEqual($expected, $result);
 
 		$data = array(
-			'name' => 'testName',
+			'name' => 'fieldname',
 			'type' => 'integer',
 			'length' => 11,
 			'default' => '1'
 		);
 		$result = $this->dbmock->buildColumn($data);
-		$expected = "`testName` int(11) DEFAULT 1";
+		$expected = "`fieldname` int(11) DEFAULT 1";
+		$this->assertEqual($expected, $result);
+
+		$data = array(
+			'name' => 'fieldname',
+			'type' => 'string',
+			'length' => 64,
+			'default' => 1
+		);
+		$result = $this->dbmock->buildColumn($data);
+		$expected = "`fieldname` varchar(64) DEFAULT '1'";
+		$this->assertEqual($expected, $result);
+
+		$data = array(
+			'name' => 'fieldname',
+			'type' => 'text',
+			'default' => 15
+		);
+		$result = $this->dbmock->buildColumn($data);
+		$expected = "`fieldname` text DEFAULT '15'";
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testBuildColumnBadType() {
 		$data = array(
-			'name' => 'testName',
+			'name' => 'fieldname',
 			'type' => 'varchar(255)',
 			'null' => true
 		);
@@ -151,21 +188,21 @@ class MySqlTest extends \lithium\test\Unit {
 		$data = array(
 			'PRIMARY' => array('column' => 'id')
 		);
-		$result = $this->dbmock->invokeMethod('_buildIndex', array($data));
-		$expected = array('PRIMARY KEY  (`id`)');
+		$result = $this->dbmock->invokeMethod('_buildIndex', array($data, 'tablename'));
+		$expected = array('PRIMARY KEY (`id`)');
 		$this->assertEqual($expected, $result);
 
 		$data = array(
 			'id' => array('column' => 'id', 'unique' => true)
 		);
-		$result = $this->dbmock->invokeMethod('_buildIndex', array($data));
+		$result = $this->dbmock->invokeMethod('_buildIndex', array($data, 'tablename'));
 		$expected = array('UNIQUE KEY `id` (`id`)');
 		$this->assertEqual($expected, $result);
 
 		$data = array(
 			'myIndex' => array('column' => array('id', 'name'), 'unique' => true)
 		);
-		$result = $this->dbmock->invokeMethod('_buildIndex', array($data));
+		$result = $this->dbmock->invokeMethod('_buildIndex', array($data, 'tablename'));
 		$expected = array('UNIQUE KEY `myIndex` (`id`, `name`)');
 		$this->assertEqual($expected, $result);
 	}
@@ -184,6 +221,58 @@ class MySqlTest extends \lithium\test\Unit {
 	}
 
 	public function testCreateSchema() {
+		$schema = new Schema(array(
+			'fields' => array(
+				'id' => array('type' => 'integer', 'key' => 'primary'),
+				'name' => array(
+					'type' => 'string',
+					'length' => 255,
+					'null' => false,
+					'comment' => 'comment'
+				),
+				'published' => array(
+					'type' => 'datetime',
+					'null' => false,
+					'default' => (object) 'CURRENT_TIMESTAMP'
+				),
+				'decimal' => array(
+					'type' => 'float',
+					'length' => 10,
+					'precision' => 2
+				),
+				'integer' => array(
+					'type' => 'integer',
+					'use' => 'bigint',
+					'length' => 10,
+					'precision' => 2
+				),
+				'date' => array(
+					'type' => 'date',
+					'null' => false,
+				),
+				'text' => array(
+					'type' => 'text',
+					'null' => false,
+				)
+			)
+		));
+
+		$result = $this->dbmock->dropSchema('test_table');
+		$this->assertTrue($result);
+
+		$expected = "CREATE TABLE `test_table` (\n";
+		$expected .= "`id` int(11) NOT NULL AUTO_INCREMENT,\n";
+		$expected .= "`name` varchar(255) NOT NULL COMMENT 'comment',\n";
+		$expected .= "`published` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n";
+		$expected .= "`decimal` decimal(10,2),\n";
+		$expected .= "`integer` bigint(10),\n";
+		$expected .= "`date` date NOT NULL,\n";
+		$expected .= "`text` text NOT NULL,\n";
+		$expected .= "PRIMARY KEY (`id`));";
+
+		$result = $this->dbmock->createSchema('test_table', $schema);
+		$this->assertEqual($expected, $result);
+
 		$schema = new Schema(array(
 			'fields' => array(
 				'id' => array('type' => 'integer', 'key' => 'primary'),
@@ -218,7 +307,7 @@ class MySqlTest extends \lithium\test\Unit {
 		$expected .= "`stringy` varchar(128) CHARACTER ";
 		$expected .= "SET cp1250 COLLATE cp1250_general_ci DEFAULT NULL,\n";
 		$expected .= "`other_col` varchar(255) CHARACTER SET latin1 NOT ";
-		$expected .= "NULL COMMENT 'Test Comment',\nPRIMARY KEY  (`id`))\n";
+		$expected .= "NULL COMMENT 'Test Comment',\nPRIMARY KEY (`id`))\n";
 		$expected .= "DEFAULT CHARSET=utf8,\nCOLLATE=utf8_unicode_ci,\nENGINE=InnoDB;";
 
 		$result = $this->dbmock->createSchema('test_table', $schema);
