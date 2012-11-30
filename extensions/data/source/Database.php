@@ -42,7 +42,7 @@ abstract class Database extends \lithium\data\source\Database {
 	/**
 	 * Strings used to render the given statement
 	 *
-	 * @see LF\Data\Source\Database::renderCommand()
+	 * @see lithium\data\source\Database::renderCommand()
 	 * @var array
 	 */
 	protected $_strings = array(
