@@ -5,7 +5,7 @@
 Checkout the code to either of your library directories:
 
 	cd libraries
-	git clone https://github.com/tmaiaroto/li3_sqltools.git
+	git clone git@github.com:UnionOfRAD/li3_sqltools.git
 
 Include the library in in your `/app/config/bootstrap/libraries.php`
 
