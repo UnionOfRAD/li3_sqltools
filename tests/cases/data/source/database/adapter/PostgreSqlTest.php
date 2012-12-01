@@ -359,6 +359,12 @@ class PostgreSqlTest extends \lithium\test\Unit {
 						'column' => 'id'
 					),
 					array(
+						'type' => 'check',
+						'expr' => array(
+							'integer' => array('<' => 10)
+						)
+					),
+					array(
 						'type' => 'foreign_key',
 						'column' => 'table_id',
 						'toColumn' => 'id',
@@ -381,6 +387,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 		$expected .= '"date" date NOT NULL,' . "\n";
 		$expected .= '"text" text NOT NULL,' . "\n";
 		$expected .= 'PRIMARY KEY ("id"),' . "\n";
+		$expected .= 'CHECK (("integer" < 10)),' . "\n";
 		$expected .= 'FOREIGN KEY ("table_id") REFERENCES "other_table" ("id") ON DELETE NO ACTION);';
 
 		$result = $this->dbmock->createSchema('test_table', $schema);

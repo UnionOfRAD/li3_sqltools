@@ -131,7 +131,7 @@ trait DatabaseSchema {
 
 		$metas = $schema->meta() + array('table' => array(), 'constraints' => array());
 
-		$constraints = $this->_buildConstraints($metas['constraints'], $source, ",\n", $primary);
+		$constraints = $this->_buildConstraints($metas['constraints'], $schema, ",\n", $primary);
 		$table = $this->_buildMetas('table', $metas['table']);
 
 		$params = compact('source', 'columns', 'constraints', 'table');
