@@ -38,6 +38,22 @@ class MySqlTest extends \lithium\test\Unit {
 		$this->dbmock = new $mock($this->_dbConfig);
 	}
 
+	public function testTableMeta() {
+		$data = array(
+			'charset' => 'utf8',
+			'collate' => 'utf8_unicode_ci',
+			'engine' => 'InnoDB');
+		$result = array();
+		foreach ($data as $key => $value){
+			$result[] = $this->dbmock->tableMeta($key, $value);
+		}
+		$expected = array(
+			'DEFAULT CHARSET=utf8',
+			'COLLATE=utf8_unicode_ci',
+			'ENGINE=InnoDB');
+		$this->assertEqual($expected, $result);
+	}
+
 	public function testBuildColumn() {
 		$data = array(
 			'name' => 'fieldname',
@@ -207,19 +223,6 @@ class MySqlTest extends \lithium\test\Unit {
 		$this->assertEqual($expected, $result);
 	}
 
-	public function testTableMetas() {
-		$data = array(
-			'charset' => 'utf8',
-			'collate' => 'utf8_unicode_ci',
-			'engine' => 'InnoDB');
-		$result = $this->dbmock->invokeMethod('_tableMetas', array($data));
-		$expected = array(
-			'DEFAULT CHARSET=utf8',
-			'COLLATE=utf8_unicode_ci',
-			'ENGINE=InnoDB');
-		$this->assertEqual($expected, $result);
-	}
-
 	public function testCreateSchema() {
 		$schema = new Schema(array(
 			'fields' => array(
@@ -292,7 +295,7 @@ class MySqlTest extends \lithium\test\Unit {
 			),
 			'meta' => array(
 				'indexes' => array('PRIMARY' => array('column' => 'id')),
-				'tableMetas' => array(
+				'table' => array(
 					'charset' => 'utf8',
 					'collate' => 'utf8_unicode_ci',
 					'engine' => 'InnoDB'

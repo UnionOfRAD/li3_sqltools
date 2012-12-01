@@ -54,16 +54,15 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 	);
 
 	/**
-	 * Field specific metas used on table creating
+	 * Column specific metas used on table creating
 	 *
 	 * @var array
 	 */
-	protected $_fieldMetas = array(
+	protected $_columnMetas = array(
 		'collate' => array(
-			'value' => 'COLLATE',
+			'keyword' => 'COLLATE',
 			'quote' => "'",
 			'join' => ' ',
-			'column' => 'Collate',
 			'position' => 'before'
 		),
 	);
@@ -124,7 +123,7 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_fieldMetas($field, 'before');
+		$out .= $this->_columnMetas($field, 'before');
 
 		if ($key === 'primary' && $use === 'integer') {
 			$out .= ' ' . $this->_columns['primary_key']['use'];

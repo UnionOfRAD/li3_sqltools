@@ -38,6 +38,19 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 	);
 
 	/**
+	 * Table specific metas used on table creating
+	 *
+	 * @var array
+	 */
+	protected $_tableMetas = array(
+		'tablespace' => array(
+			'keyword' => 'TABLESPACE',
+			'quote' => false,
+			'join' => ' '
+		)
+	);
+
+	/**
 	 * PostgreSQL column type definitions.
 	 *
 	 * @var array
@@ -64,11 +77,8 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 	 * @param string $table Table name
 	 * @return string
 	 */
-	protected function _buildIndex($indexes, $table = null) {
+	protected function _buildIndex(array $indexes, $table = null) {
 		$join = array();
-		if (!is_array($indexes)) {
-			return array();
-		}
 		foreach ($indexes as $name => $value) {
 			if ($name == 'PRIMARY') {
 				$out = 'PRIMARY KEY (' . $this->name($value['column']) . ')';
@@ -88,6 +98,20 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 			$join[] = $out;
 		}
 		return $join;
+	}
+
+	protected function schemaConstraint($source, $name, array $value) {
+		$out = 'CREATE ';
+		if (!empty($value['unique'])) {
+			$out .= 'UNIQUE ';
+		}
+		if (is_array($value['column'])) {
+			$column = array_map(array($this, 'name'), $value['column']);
+			$value['column'] = implode(', ', $column);
+		} else {
+			$value['column'] = $this->name($value['column']);
+		}
+		$out .= "INDEX {$name} ON {$source} ({$value['column']});";
 	}
 
 	/**

@@ -55,30 +55,27 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 		'boolean' => array('use' => 'tinyint', 'length' => 1)
 	);
 	/**
-	 * Field specific metas used on table creating
+	 * Column specific metas used on table creating
 	 *
 	 * @var array
 	 */
-	protected $_fieldMetas = array(
+	protected $_columnMetas = array(
 		'charset' => array(
-			'value' => 'CHARACTER SET',
+			'keyword' => 'CHARACTER SET',
 			'quote' => false,
 			'join' => ' ',
-			'column' => false,
 			'position' => 'before'
 		),
 		'collate' => array(
-			'value' => 'COLLATE',
+			'keyword' => 'COLLATE',
 			'quote' => false,
 			'join' => ' ',
-			'column' => 'Collation',
 			'position' => 'before'
 		),
 		'comment' => array(
-			'value' => 'COMMENT',
+			'keyword' => 'COMMENT',
 			'quote' => true,
 			'join' => ' ',
-			'column' => 'Comment',
 			'position' => 'after'
 		)
 	);
@@ -89,22 +86,19 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 	 */
 	protected $_tableMetas = array(
 		'charset' => array(
-			'value' => 'DEFAULT CHARSET',
+			'keyword' => 'DEFAULT CHARSET',
 			'quote' => false,
-			'join' => '=',
-			'column' => 'charset'
+			'join' => '='
 		),
 		'collate' => array(
-			'value' => 'COLLATE',
+			'keyword' => 'COLLATE',
 			'quote' => false,
-			'join' => '=',
-			'column' => 'Collation'
+			'join' => '='
 		),
 		'engine' => array(
-			'value' => 'ENGINE',
+			'keyword' => 'ENGINE',
 			'quote' => false,
-			'join' => '=',
-			'column' => 'Engine'
+			'join' => '='
 		)
 	);
 
@@ -160,7 +154,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_fieldMetas($field, 'before');
+		$out .= $this->_columnMetas($field, 'before');
 
 		if ($key === 'primary' && $use === 'int') {
 			$out .= ' ' . $this->_columns['primary_key']['use'];
@@ -178,7 +172,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 			$out .= ' NOT NULL';
 		}
 
-		return $out . $this->_fieldMetas($field, 'after');
+		return $out . $this->_columnMetas($field, 'after');
 	}
 }
 

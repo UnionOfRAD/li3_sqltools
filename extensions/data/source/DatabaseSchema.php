@@ -8,6 +8,7 @@
 
 namespace li3_sqltools\extensions\data\source;
 
+use InvalidArgumentException;
 use UnexpectedValueException;
 
 /**
@@ -16,47 +17,48 @@ use UnexpectedValueException;
 trait DatabaseSchema {
 
 	/**
-	 * Build field metas
+	 * Build a column meta
 	 *
-	 * @param array $data The array of column data.
-	 * @param string $position The position type to use. 'before' or 'after' are common
+	 * @param array $name The name of a meta
+	 * @param string $value The value of the meta
 	 * @return string a built column parameters.
 	 */
-	protected function _fieldMetas($data, $position) {
-		$result = '';
-		foreach ($this->_fieldMetas as $key => $value) {
-			if (isset($data[$key]) && $value['position'] == $position) {
-				if (isset($value['options']) && !in_array($data[$key], $value['options'])) {
-					continue;
-				}
-				$val = $data[$key];
-				if ($value['quote']) {
-					$val = $this->value($val, array('type' => 'string'));
-				}
-				$result .= ' ' . $value['value'] . $value['join'] . $val;
-			}
+	public function columnMeta($name, $value) {
+		$meta = isset($this->_columnMetas[$name]) ? $this->_columnMetas[$name] : null;
+		if (!$meta || (isset($meta['options']) && !in_array($value, $meta['options']))) {
+			return;
 		}
-		return $result;
+		return $this->buildMeta($meta + compact('value'));
 	}
 
 	/**
-	 * Build table metas
+	 * Build a column meta
 	 *
-	 * @param array $metas
-	 * @return array
+	 * @param array $name The name of a meta
+	 * @param string $value The value of the meta
+	 * @return string a built column parameters.
 	 */
-	protected function _tableMetas($metas) {
-		$result = array();
-		foreach ($metas as $name => $value) {
-			if (isset($this->_tableMetas[$name])) {
-				$metas = $this->_tableMetas[$name];
-				if ($metas['quote']) {
-					$value = $this->value($value, array('type' => 'string'));
-				}
-				$result[] = $metas['value']. $metas['join'] . $value;
-			}
+	public function tableMeta($name, $value) {
+		$meta = isset($this->_tableMetas[$name]) ? $this->_tableMetas[$name] : null;
+		if (!$meta || (isset($meta['options']) && !in_array($value, $meta['options']))) {
+			return;
 		}
-		return $result;
+		return $this->buildMeta($meta + compact('value'));
+	}
+
+	/**
+	 * Build a meta
+	 * @param type $meta
+	 * @return string
+	 */
+	public function buildMeta($meta) {
+		extract($meta);
+		if ($quote === true) {
+			$value = $this->value($value, array('type' => 'string'));
+		} elseif ($quote) {
+			$value = $quote .$value . $quote;
+		}
+		return $keyword . $join . $value;
 	}
 
 	/**
@@ -76,29 +78,34 @@ trait DatabaseSchema {
 		$primary = null;
 		$source = $this->name($source);
 
-		foreach ($schema->fields() as $name => $col) {
-			if (is_string($col)) {
-				$col = array('type' => $col);
+		foreach ($schema->fields() as $name => $field) {
+			if (is_string($field)) {
+				$field = array('type' => $field);
 			}
-			if (isset($col['key']) && $col['key'] === 'primary') {
+			if (isset($field['key']) && $field['key'] === 'primary') {
 				$primary = $name;
 			}
-			$col['name'] = $name;
-			if (!isset($col['type'])) {
-				$col['type'] = 'string';
-			}
-			$columns[] = $this->buildColumn($col);
+			$field['name'] = $name;
+			$columns[] = $this->buildColumn($field);
 		}
-		foreach ($schema->meta() as $name => $col) {
+
+		$metas = $schema->meta();
+
+		if ($primary) {
+			$meta = array('PRIMARY' => array('column' => $primary, 'unique' => true));
+			$metas['indexes'] = isset($metas['indexes']) ? $metas['indexes'] + $meta : $meta;
+		}
+
+		foreach ($metas as $name => $col) {
 			if ($name === 'indexes') {
-				$indexes = array_merge($indexes, $this->_buildIndex($col, $source));
-			} elseif ($name === 'tableMetas') {
-				$tableMetas = array_merge($tableMetas, $this->_tableMetas($col));
+				$indexes = $this->_buildIndex($col, $source);
+			} elseif ($name === 'table') {
+				foreach ($col as $key => $value) {
+					if (isset($this->_tableMetas[$key])) {
+						$tableMetas[] = $this->buildMeta($this->_tableMetas[$key] + compact('value'));
+					}
+				}
 			}
-		}
-		if (empty($indexes) && !empty($primary)) {
-			$col = array('PRIMARY' => array('column' => $primary, 'unique' => 1));
-			$indexes = array_merge($indexes, $this->_buildIndex($col, $source));
 		}
 
 		foreach (array('columns', 'indexes', 'tableMetas') as $var) {
@@ -115,6 +122,39 @@ trait DatabaseSchema {
 
 		$params = compact('source', 'columns', 'indexes', 'tableMetas');
 		return $this->_execute($this->renderCommand('schema', $params));
+	}
+
+	/**
+	 * Build column metas
+	 *
+	 * @param array $metas The array of column metas.
+	 * @param string $position The position type to use. 'before' or 'after' are common
+	 * @return string a built column parameters.
+	 */
+	protected function _columnMetas(array $metas, $position = null) {
+		$result = '';
+		foreach ($metas as $key => $value) {
+			$meta = isset($this->_columnMetas[$key]) ? $this->_columnMetas[$key] : null;
+			if ($meta && ($meta['position'] == $position || !$position)) {
+				$result .= ' ' . $this->columnMeta($key, $value);
+			}
+		}
+		return $result;
+	}
+	/**
+	 * Build table metas
+	 *
+	 * @param array $metas
+	 * @return array
+	 */
+	protected function _tableMetas(array $metas) {
+		$result = array();
+		foreach ($metas as $name => $value) {
+			if (isset($this->_tableMetas[$name])) {
+				$result[] = $this->buildMeta($this->_tableMetas[$name] + compact('value'));
+			}
+		}
+		return $result;
 	}
 
 	/**
@@ -142,8 +182,12 @@ trait DatabaseSchema {
 	 * @return string SQL string
 	 */
 	public function buildColumn($field) {
-		if (!isset($field['name']) || !isset($field['type'])) {
-			throw new InvalidArgumentException("Column name or type not defined in schema.");
+		if (!isset($field['type'])) {
+			$field['type'] = 'string';
+		}
+
+		if (!isset($field['name'])) {
+			throw new InvalidArgumentException("Column name not defined.");
 		}
 
 		if (!isset($this->_columns[$field['type']])) {

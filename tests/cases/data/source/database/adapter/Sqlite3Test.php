@@ -277,7 +277,9 @@ class Sqlite3Test extends \lithium\test\Unit {
 			),
 			'meta' => array(
 				'indexes' => array(
-					'PRIMARY' => array('column' => 'id')
+					'PRIMARY' => array(
+						'column' => 'id'
+					)
 				)
 			)
 		));
