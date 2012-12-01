@@ -33,21 +33,8 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 		'update' => "UPDATE {:source} SET {:fields} {:conditions};{:comment}",
 		'delete' => "DELETE {:flags} FROM {:source} {:conditions};{:comment}",
 		'join' => "{:type} JOIN {:source} {:alias} {:constraints}",
-		'schema' => "CREATE TABLE {:source} (\n{:columns}\n{:indexes}){:tableMetas};{:comment}",
+		'schema' => "CREATE TABLE {:source} (\n{:columns}{:constraints}){:table};{:comment}",
 		'drop'   => "DROP TABLE {:exists}{:source};"
-	);
-
-	/**
-	 * Table specific metas used on table creating
-	 *
-	 * @var array
-	 */
-	protected $_tableMetas = array(
-		'tablespace' => array(
-			'keyword' => 'TABLESPACE',
-			'quote' => false,
-			'join' => ' '
-		)
 	);
 
 	/**
@@ -56,66 +43,46 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 	 * @var array
 	 */
 	protected $_columns = array(
-		'primary_key' => array('use' => 'serial NOT NULL'),
+		'primary' => array('use' => 'integer', 'increment' => true),
 		'string' => array('use' => 'varchar', 'length' => 255),
 		'text' => array('use' => 'text'),
 		'integer' => array('use' => 'integer', 'formatter' => 'intval'),
-		'float' => array('use' => 'float', 'formatter' => 'floatval'),
+		'float' => array('use' => 'real', 'formatter' => 'floatval'),
 		'datetime' => array('use' => 'timestamp', 'format' => 'Y-m-d H:i:s', 'formatter' => 'date'),
 		'time' => array('use' => 'time', 'format' => 'H:i:s', 'formatter' => 'date'),
 		'date' => array('use' => 'date', 'format' => 'Y-m-d', 'formatter' => 'date'),
 		'binary' => array('use' => 'bytea'),
 		'boolean' => array('use' => 'boolean'),
-		'number' => array('use' => 'numeric'),
 		'inet' => array('use' => 'inet')
 	);
 
 	/**
-	 * Build indexes for create table
+	 * Table specific metas used on table creating
+	 * By default `'escape'` is false and 'join' is `' '`
 	 *
-	 * @param array $indexes Indexes
-	 * @param string $table Table name
-	 * @return string
+	 * @var array
 	 */
-	protected function _buildIndex(array $indexes, $table = null) {
-		$join = array();
-		foreach ($indexes as $name => $value) {
-			if ($name == 'PRIMARY') {
-				$out = 'PRIMARY KEY (' . $this->name($value['column']) . ')';
-			} else {
-				$out = 'CREATE ';
-				if (!empty($value['unique'])) {
-					$out .= 'UNIQUE ';
-				}
-				if (is_array($value['column'])) {
-					$column = array_map(array(&$this, 'name'), $value['column']);
-					$value['column'] = implode(', ', $column);
-				} else {
-					$value['column'] = $this->name($value['column']);
-				}
-				$out .= "INDEX {$name} ON {$table} ({$value['column']});";
-			}
-			$join[] = $out;
-		}
-		return $join;
-	}
-
-	protected function schemaConstraint($source, $name, array $value) {
-		$out = 'CREATE ';
-		if (!empty($value['unique'])) {
-			$out .= 'UNIQUE ';
-		}
-		if (is_array($value['column'])) {
-			$column = array_map(array($this, 'name'), $value['column']);
-			$value['column'] = implode(', ', $column);
-		} else {
-			$value['column'] = $this->name($value['column']);
-		}
-		$out .= "INDEX {$name} ON {$source} ({$value['column']});";
-	}
+	protected $_metas = array(
+		'table' => array(
+			'tablespace' => array('keyword' => 'TABLESPACE')
+		),
+		'constraint' => array(
+			'primary' => array('template' => 'PRIMARY KEY ({:column})'),
+			'foreign_key' => array(
+				'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
+			),
+			'unique' => array(
+				'template' => 'UNIQUE {:index} ({:column})',
+				'key' => 'KEY',
+				'index' => 'INDEX'
+			),
+			'check' => array('template' => 'CHECK ({:expr})')
+		)
+	);
 
 	/**
 	 * Helper for `DatabaseSchema::buildColumn()`
+	 *
 	 * @param array $field A field array
 	 * @return string SQL column string
 	 */
@@ -129,26 +96,19 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 			$precision = $use === 'numeric' ? ",{$precision}" : '';
 		}
 
-		if ($key === 'primary' && $type === 'integer') {
-			$out = $this->name($name) . ' ' . $this->_columns['primary_key']['use'];
+		$out = $this->name($name);
+
+		if ($key === 'primary' && $type === 'integer' && $increment) {
+			$out .= ' serial NOT NULL';
 		} else {
-			$out = $this->name($name) . ' ' . $use;
+			$out .= ' ' . $use;
 
 			if ($length && preg_match('/char|numeric|interval|bit|time/',$use)) {
 				$out .= "({$length}{$precision})";
 			}
 
-			if (isset($default) && $null === false) {
-				$out .= ' NOT NULL DEFAULT ' . $this->value($default, $field);
-			} elseif (isset($default)) {
-				$out .= ' DEFAULT ' . $this->value($default, $field);
-			} elseif ($use !== 'timestamp' && $null) {
-				$out .= ' DEFAULT NULL';
-			} elseif ($use === 'timestamp' && $null) {
-				$out .= ' NULL';
-			} elseif ($null === false) {
-				$out .= ' NOT NULL';
-			}
+			$out .= is_bool($null) ? ($null ? ' NULL' : ' NOT NULL') : '' ;
+			$out .= $default ? ' DEFAULT ' . $this->value($default, $field) : '';
 		}
 
 		return $out;

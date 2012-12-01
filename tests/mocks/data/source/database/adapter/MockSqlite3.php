@@ -10,10 +10,18 @@ namespace li3_sqltools\tests\mocks\data\source\database\adapter;
 
 class MockSqlite3 extends \li3_sqltools\extensions\data\source\database\adapter\Sqlite3 {
 
+	public function __construct(array $config = array()) {
+		$this->connection = $this;
+	}
+
 	protected function _execute($sql) {
 		return $sql;
 	}
-	
+
+	public function quote($value) {
+		return "'{$value}'";
+	}
+
 }
 
 ?>

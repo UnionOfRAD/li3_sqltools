@@ -31,7 +31,7 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 		'update' => "UPDATE {:source} SET {:fields} {:conditions};{:comment}",
 		'delete' => "DELETE {:flags} FROM {:source} {:conditions};{:comment}",
 		'join' => "{:type} JOIN {:source} {:alias} {:constraints}",
-		'schema' => "CREATE TABLE {:source} (\n{:columns}\n{:indexes}){:tableMetas};{:comment}",
+		'schema' => "CREATE TABLE {:source} (\n{:columns}{:constraints}){:table};{:comment}",
 		'drop'   => "DROP TABLE {:exists}{:source};"
 	);
 
@@ -41,7 +41,7 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 	 * @var array
 	 */
 	protected $_columns = array(
-		'primary_key' => array('use' => 'PRIMARY KEY'),
+		'primary' => array('use' => 'integer'),
 		'string' => array('use' => 'text', 'length' => 255),
 		'text' => array('use' => 'text'),
 		'integer' => array('use' => 'integer', 'formatter' => 'intval'),
@@ -55,53 +55,27 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 
 	/**
 	 * Column specific metas used on table creating
+	 * By default `'quote'` is false and 'join' is `' '`
 	 *
 	 * @var array
 	 */
-	protected $_columnMetas = array(
-		'collate' => array(
-			'keyword' => 'COLLATE',
-			'quote' => "'",
-			'join' => ' ',
-			'position' => 'before'
+	protected $_metas = array(
+		'column' => array(
+			'collate' => array('keyword' => 'COLLATE', 'escape' => true)
 		),
+		'constraint' => array(
+			'primary' => array('template' => 'PRIMARY KEY ({:column})'),
+			'foreign_key' => array(
+				'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
+			),
+			'unique' => array(
+				'template' => 'UNIQUE {:index} ({:column})',
+				'key' => 'KEY',
+				'index' => 'INDEX'
+			),
+			'check' => array('template' => 'CHECK ({:expr})')
+		)
 	);
-
-	/**
-	 * Build indexes for create table
-	 *
-	 * @param array $indexes Indexes
-	 * @param string $table Table name
-	 * @return string
-	 */
-	protected function _buildIndex($indexes, $table = null) {
-		$join = array();
-
-		$table = str_replace('"', '', $table);
-
-		foreach ($indexes as $name => $value) {
-
-			if ($name == 'PRIMARY') {
-				continue;
-			}
-			$out = 'CREATE ';
-
-			if (!empty($value['unique'])) {
-				$out .= 'UNIQUE ';
-			}
-			if (is_array($value['column'])) {
-				$value['column'] = join(', ', array_map(array(&$this, 'name'), $value['column']));
-			} else {
-				$value['column'] = $this->name($value['column']);
-			}
-			$t = trim($table, '"');
-			$indexname = $this->name($t . '_' . $name);
-			$table = $this->name($table);
-			$out .= "INDEX {$indexname} ON {$table} ({$value['column']});";
-			$join[] = $out;
-		}
-		return $join;
-	}
 
 	/**
 	 * Helper for `DatabaseSchema::buildColumn()`
@@ -114,29 +88,20 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 			$use = 'numeric';
 		}
 
-		if ($precision) {
-			$precision = preg_match('/integer|real|numeric/',$use) ? ",{$precision}" : '';
-		}
 		$out = $this->name($name) . ' ' . $use;
 
-		if ($length && preg_match('/integer|real|numeric|text/',$use)) {
+		$allowPrecision = preg_match('/^(integer|real|numeric)$/',$use);
+		$precision = ($precision && $allowPrecision) ? ",{$precision}" : '';
+
+		if ($length && ($allowPrecision || $use === 'text')) {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_columnMetas($field, 'before');
+		$out .= $this->_buildMetas('column', $field, array('collate'));
 
-		if ($key === 'primary' && $use === 'integer') {
-			$out .= ' ' . $this->_columns['primary_key']['use'];
-		} elseif ($key === 'primary') {
-			$out .= ' NOT NULL';
-		} elseif (isset($default) && $null === false) {
-			$out .= ' NOT NULL DEFAULT ' . $this->value($default, $field);
-		} elseif (isset($default)) {
-			$out .= ' DEFAULT ' . $this->value($default, $field);
-		} elseif ($null) {
-			$out .= ' NULL';
-		} elseif ($null === false) {
-			$out .= ' NOT NULL';
+		if ($key !== 'primary' || $type !== 'integer') {
+			$out .= is_bool($null) ? ($null ? ' NULL' : ' NOT NULL') : '' ;
+			$out .= $default ? ' DEFAULT ' . $this->value($default, $field) : '';
 		}
 
 		return $out;

@@ -33,7 +33,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 		'update' => "UPDATE {:source} SET {:fields} {:conditions};{:comment}",
 		'delete' => "DELETE {:flags} FROM {:source} {:conditions};{:comment}",
 		'join' => "{:type} JOIN {:source} {:alias} {:constraints}",
-		'schema' => "CREATE TABLE {:source} (\n{:columns}\n{:indexes}){:tableMetas};{:comment}",
+		'schema' => "CREATE TABLE {:source} (\n{:columns}{:constraints}){:table};{:comment}",
 		'drop'   => "DROP TABLE {:exists}{:source};"
 	);
 
@@ -43,100 +43,55 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 	 * @var array
 	 */
 	protected $_columns = array(
-		'primary_key' => array('use' => 'NOT NULL AUTO_INCREMENT'),
+		'primary' => array('use' => 'int', 'length' => 11, 'increment' => true),
 		'string' => array('use' => 'varchar', 'length' => 255),
 		'text' => array('use' => 'text'),
 		'integer' => array('use' => 'int', 'length' => 11, 'formatter' => 'intval'),
 		'float' => array('use' => 'float', 'formatter' => 'floatval'),
-		'datetime' => array('use' => 'datetime', 'format' => 'Y-m-d H:i:s', 'formatter' => 'date'),
+		'datetime' => array('use' => 'timestamp', 'format' => 'Y-m-d H:i:s', 'formatter' => 'date'),
 		'time' => array('use' => 'time', 'format' => 'H:i:s', 'formatter' => 'date'),
 		'date' => array('use' => 'date', 'format' => 'Y-m-d', 'formatter' => 'date'),
 		'binary' => array('use' => 'blob'),
 		'boolean' => array('use' => 'tinyint', 'length' => 1)
 	);
 	/**
-	 * Column specific metas used on table creating
+	 * Meta atrribute syntax
+	 * By default `'escape'` is false and 'join' is `' '`
 	 *
 	 * @var array
 	 */
-	protected $_columnMetas = array(
-		'charset' => array(
-			'keyword' => 'CHARACTER SET',
-			'quote' => false,
-			'join' => ' ',
-			'position' => 'before'
+	protected $_metas = array(
+		'column' => array(
+			'charset' => array('keyword' => 'CHARACTER SET'),
+			'collate' => array('keyword' => 'COLLATE'),
+			'comment' => array('keyword' => 'COMMENT', 'escape' => true)
 		),
-		'collate' => array(
-			'keyword' => 'COLLATE',
-			'quote' => false,
-			'join' => ' ',
-			'position' => 'before'
+		'table' => array(
+			'charset' => array('keyword' => 'DEFAULT CHARSET'),
+			'collate' => array('keyword' => 'COLLATE'),
+			'engine' => array('keyword' => 'ENGINE'),
+			'tablespace' => array('keyword' => 'TABLESPACE')
 		),
-		'comment' => array(
-			'keyword' => 'COMMENT',
-			'quote' => true,
-			'join' => ' ',
-			'position' => 'after'
+		'constraint' => array(
+			'primary' => array('template' => 'PRIMARY KEY ({:column})'),
+			'foreign_key' => array(
+				'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
+			),
+			'index' => array('template' => 'INDEX ({:column})'),
+			'unique' => array(
+				'template' => 'UNIQUE {:index} ({:column})',
+				'key' => 'KEY',
+				'index' => 'INDEX'
+			),
+			'check' => array('template' => 'CHECK ({:expr})')
 		)
 	);
-	/**
-	 * Table specific metas used on table creating
-	 *
-	 * @var array
-	 */
-	protected $_tableMetas = array(
-		'charset' => array(
-			'keyword' => 'DEFAULT CHARSET',
-			'quote' => false,
-			'join' => '='
-		),
-		'collate' => array(
-			'keyword' => 'COLLATE',
-			'quote' => false,
-			'join' => '='
-		),
-		'engine' => array(
-			'keyword' => 'ENGINE',
-			'quote' => false,
-			'join' => '='
-		)
-	);
-
-	/**
-	 * Build indexes for create table
-	 *
-	 * @param array $indexes Indexes
-	 * @param string $table Table name
-	 * @return string
-	 */
-	protected function _buildIndex($indexes, $table = null) {
-		$join = array();
-		foreach ($indexes as $name => $value) {
-			$out = '';
-			if ($name === 'PRIMARY') {
-				$out .= $name;
-				$name = '';
-			} else {
-				if (!empty($value['unique'])) {
-					$out .= 'UNIQUE';
-				}
-				$name = $this->_quotes[0] . $name . $this->_quotes[1] . ' ';
-			}
-			if (is_array($value['column'])) {
-				$column = array_map(array($this, 'name'), $value['column']);
-				$out .= ' KEY ' . $name . '(' . implode(', ', $column) . ')';
-			} else {
-				$out .= ' KEY ' . $name . '(' . $this->name($value['column']) . ')';
-			}
-			$join[] = $out;
-		}
-		return $join;
-	}
 
 	/**
 	 * Helper for `DatabaseSchema::buildColumn()`
+	 *
 	 * @param array $field A field array
-	 * @return string SQL column string
+	 * @return string The SQL column string
 	 */
 	protected function _buildColumn($field) {
 		extract($field);
@@ -144,35 +99,25 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 			$use = 'decimal';
 		}
 
-		if ($precision) {
-			$precision = preg_match('/decimal|float|double/',$use) ? ",{$precision}" : '';
-		}
-
 		$out = $this->name($name) . ' ' . $use;
 
-		if ($length && preg_match('/char|decimal|int|float|double|year|timestamp/',$use)) {
+		$allowPrecision = preg_match('/^(decimal|float|double|real|numeric)$/',$use);
+		$precision = ($precision && $allowPrecision) ? ",{$precision}" : '';
+
+		if ($length && ($allowPrecision || preg_match('/(char|binary|int|year|timestamp)/',$use))) {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_columnMetas($field, 'before');
+		$out .= $this->_buildMetas('column', $field, array('charset', 'collate'));
 
-		if ($key === 'primary' && $use === 'int') {
-			$out .= ' ' . $this->_columns['primary_key']['use'];
-		} elseif ($key === 'primary') {
-			$out .= ' NOT NULL';
-		} elseif (isset($default) && $null === false) {
-			$out .= ' NOT NULL DEFAULT ' . $this->value($default, $field);
-		} elseif (isset($default)) {
-			$out .= ' DEFAULT ' . $this->value($default, $field);
-		} elseif ($use !== 'datetime' && $null) {
-			$out .= ' DEFAULT NULL';
-		} elseif ($use === 'datetime' && $null) {
-			$out .= ' NULL';
-		} elseif ($null === false) {
-			$out .= ' NOT NULL';
+		if ($key === 'primary' && $use === 'int' && $increment) {
+			$out .= ' NOT NULL AUTO_INCREMENT';
+		} else {
+			$out .= is_bool($null) ? ($null ? ' NULL' : ' NOT NULL') : '' ;
+			$out .= $default ? ' DEFAULT ' . $this->value($default, $field) : '';
 		}
 
-		return $out . $this->_columnMetas($field, 'after');
+		return $out . $this->_buildMetas('column', $field, array('comment'));
 	}
 }
 

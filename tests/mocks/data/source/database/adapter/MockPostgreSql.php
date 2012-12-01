@@ -8,12 +8,19 @@
 
 namespace li3_sqltools\tests\mocks\data\source\database\adapter;
 
-class MockPostgreSQL extends \li3_sqltools\extensions\data\source\database\adapter\PostgreSQL {
+class MockPostgreSQL extends \li3_sqltools\extensions\data\source\database\adapter\PostgreSql {
+
+	public function __construct(array $config = array()) {
+		$this->connection = $this;
+	}
 
 	protected function _execute($sql) {
 		return $sql;
 	}
 
+	public function quote($value) {
+		return "'{$value}'";
+	}
 }
 
 ?>
