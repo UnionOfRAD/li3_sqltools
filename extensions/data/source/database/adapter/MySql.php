@@ -71,24 +71,29 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 			'collate' => array('keyword' => 'COLLATE'),
 			'engine' => array('keyword' => 'ENGINE'),
 			'tablespace' => array('keyword' => 'TABLESPACE')
-		),
-		'constraint' => array(
-			'primary' => array('template' => 'PRIMARY KEY ({:column})'),
-			'foreign_key' => array(
-				'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
-			),
-			'index' => array('template' => 'INDEX ({:column})'),
-			'unique' => array(
-				'template' => 'UNIQUE {:index} ({:column})',
-				'key' => 'KEY',
-				'index' => 'INDEX'
-			),
-			'check' => array('template' => 'CHECK ({:expr})')
 		)
+	);
+	/**
+	 * Column contraints
+	 *
+	 * @var array
+	 */
+	protected $_constraints = array(
+		'primary' => array('template' => 'PRIMARY KEY ({:column})'),
+		'foreign_key' => array(
+			'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
+		),
+		'index' => array('template' => 'INDEX ({:column})'),
+		'unique' => array(
+			'template' => 'UNIQUE {:index} ({:column})',
+			'key' => 'KEY',
+			'index' => 'INDEX'
+		),
+		'check' => array('template' => 'CHECK ({:expr})')
 	);
 
 	/**
-	 * Helper for `DatabaseSchema::buildColumn()`
+	 * Helper for `DatabaseSchema::_column()`
 	 *
 	 * @param array $field A field array
 	 * @return string The SQL column string
@@ -108,7 +113,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_buildMetas('column', $field, array('charset', 'collate'));
+		$out .= $this->_metas('column', $field, array('charset', 'collate'));
 
 		if ($key === 'primary' && $use === 'int' && $increment) {
 			$out .= ' NOT NULL AUTO_INCREMENT';
@@ -117,7 +122,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 			$out .= $default ? ' DEFAULT ' . $this->value($default, $field) : '';
 		}
 
-		return $out . $this->_buildMetas('column', $field, array('comment'));
+		return $out . $this->_metas('column', $field, array('comment'));
 	}
 }
 

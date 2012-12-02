@@ -19,18 +19,14 @@ use UnexpectedValueException;
 trait DatabaseSchema {
 
 	/**
-	 * Build a meta
+	 * Build a SQL column/table meta
 	 *
-	 * @param string $type The type of the meta to build
+	 * @param string $type The type of the meta to build (possible values: 'table' or 'column')
 	 * @param string $name The name of the meta to build
 	 * @param mixed $value The value used for building the meta
-	 * @param object $schema A `Schema` instance.
 	 * @return string The SQL meta string
 	 */
-	public function buildMeta($type, $name, $value, $schema = null) {
-		if ($type === 'constraint') {
-			return $this->_buildConstraint($name, $value, $schema);
-		}
+	protected function _meta($type, $name, $value) {
 		$meta = isset($this->_metas[$type][$name]) ? $this->_metas[$type][$name] : null;
 		if (!$meta || (isset($meta['options']) && !in_array($value, $meta['options']))) {
 			return;
@@ -45,18 +41,16 @@ trait DatabaseSchema {
 	}
 
 	/**
-	 * Helper for `DatabaseSchema::buildMeta()`
-	 *
-	 * @see DatabaseSchema::buildMeta()
+	 * Build a SQL column constraint
 	 *
 	 * @param string $name The name of the meta to build
 	 * @param mixed $value The value used for building the meta
 	 * @param object $schema A `Schema` instance.
 	 * @return string The SQL meta string
 	 */
-	protected function _buildConstraint($name, $value, $schema) {
+	protected function _constraint($name, $value, $schema = null) {
 		$value += array('options' => array());
-		$meta = isset($this->_metas['constraint'][$name]) ? $this->_metas['constraint'][$name] : null;
+		$meta = isset($this->_constraints[$name]) ? $this->_constraints[$name] : null;
 		$template = isset($meta['template']) ? $meta['template'] : null;
 		if (!$template) {
 			return;
@@ -125,36 +119,36 @@ trait DatabaseSchema {
 			if (isset($field['key']) && $field['key'] === 'primary') {
 				$primary = $name;
 			}
-			$columns[] = $this->buildColumn($field);
+			$columns[] = $this->_column($field);
 		}
 		$columns = join(",\n", array_filter($columns));
 
 		$metas = $schema->meta() + array('table' => array(), 'constraints' => array());
 
-		$constraints = $this->_buildConstraints($metas['constraints'], $schema, ",\n", $primary);
-		$table = $this->_buildMetas('table', $metas['table']);
+		$constraints = $this->_constraints($metas['constraints'], $schema, ",\n", $primary);
+		$table = $this->_metas('table', $metas['table']);
 
 		$params = compact('source', 'columns', 'constraints', 'table');
 		return $this->_execute($this->renderCommand('schema', $params));
 	}
 
 	/**
-	 * Helper for building metas
+	 * Helper for building columns metas
 	 *
 	 * @see DatabaseSchema::createSchema()
-	 * @see DatabaseSchema::buildColumn()
+	 * @see DatabaseSchema::_column()
 	 *
 	 * @param array $metas The array of column metas.
 	 * @param array $names If `$names` is not `null` only build meta present in `$names`
 	 * @param type $joiner The join character
 	 * @return string The SQL constraints
 	 */
-	protected function _buildMetas($type, array $metas, $names = null, $joiner = ' ') {
+	protected function _metas($type, array $metas, $names = null, $joiner = ' ') {
 		$result = '';
 		$names = $names ? (array) $names : array_keys($metas);
 		foreach ($names as $name) {
 			$value = isset($metas[$name]) ? $metas[$name] : null;
-			if ($value && $meta = $this->buildMeta($type, $name, $value)) {
+			if ($value && $meta = $this->_meta($type, $name, $value)) {
 				$result .= $joiner . $meta;
 			}
 		}
@@ -162,7 +156,7 @@ trait DatabaseSchema {
 	}
 
 	/**
-	 * Helper for building constraints
+	 * Helper for building columns constraints
 	 *
 	 * @see DatabaseSchema::createSchema()
 	 *
@@ -171,12 +165,12 @@ trait DatabaseSchema {
 	 * @param type $joiner The join character
 	 * @return string The SQL constraints
 	 */
-	protected function _buildConstraints(array $constraints, $schema = null, $joiner = ' ', $primary = false) {
+	protected function _constraints(array $constraints, $schema = null, $joiner = ' ', $primary = false) {
 		$result = '';
 		foreach($constraints as $constraint) {
 			if (isset($constraint['type'])) {
 				$name = $constraint['type'];
-				if ($meta = $this->buildMeta('constraint', $name, $constraint, $schema)) {
+				if ($meta = $this->_constraint($name, $constraint, $schema)) {
 					$result .= $joiner . $meta;
 				}
 				if ($name == 'primary') {
@@ -185,7 +179,7 @@ trait DatabaseSchema {
 			}
 		}
 		if ($primary) {
-			$result .= $joiner . $this->buildMeta('constraint', 'primary', array('column' => $primary));
+			$result .= $joiner . $this->_constraint('primary', array('column' => $primary));
 		}
 		return $result;
 	}
@@ -214,7 +208,7 @@ trait DatabaseSchema {
 	 *        be `'default'`, `'null'`, `'length'`, `'key'` or `'precision'`.
 	 * @return string SQL string
 	 */
-	public function buildColumn($field) {
+	protected function _column($field) {
 		if (!isset($field['type'])) {
 			$field['type'] = 'string';
 		}

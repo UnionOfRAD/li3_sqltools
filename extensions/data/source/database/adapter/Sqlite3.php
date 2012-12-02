@@ -62,23 +62,29 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 	protected $_metas = array(
 		'column' => array(
 			'collate' => array('keyword' => 'COLLATE', 'escape' => true)
-		),
-		'constraint' => array(
-			'primary' => array('template' => 'PRIMARY KEY ({:column})'),
-			'foreign_key' => array(
-				'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
-			),
-			'unique' => array(
-				'template' => 'UNIQUE {:index} ({:column})',
-				'key' => 'KEY',
-				'index' => 'INDEX'
-			),
-			'check' => array('template' => 'CHECK ({:expr})')
 		)
+	);
+	/**
+	 * Column contraints
+	 *
+	 * @var array
+	 */
+	protected $_constraints = array(
+		'primary' => array('template' => 'PRIMARY KEY ({:column})'),
+		'foreign_key' => array(
+			'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
+		),
+		'unique' => array(
+			'template' => 'UNIQUE {:index} ({:column})',
+			'key' => 'KEY',
+			'index' => 'INDEX'
+		),
+		'check' => array('template' => 'CHECK ({:expr})')
 	);
 
 	/**
-	 * Helper for `DatabaseSchema::buildColumn()`
+	 * Helper for `DatabaseSchema::_column()`
+	 *
 	 * @param array $field A field array
 	 * @return string SQL column string
 	 */
@@ -97,7 +103,7 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_buildMetas('column', $field, array('collate'));
+		$out .= $this->_metas('column', $field, array('collate'));
 
 		if ($key !== 'primary' || $type !== 'integer') {
 			$out .= is_bool($null) ? ($null ? ' NULL' : ' NOT NULL') : '' ;

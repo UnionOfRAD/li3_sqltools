@@ -57,7 +57,7 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 	);
 
 	/**
-	 * Table specific metas used on table creating
+	 * Column/table metas
 	 * By default `'escape'` is false and 'join' is `' '`
 	 *
 	 * @var array
@@ -65,23 +65,28 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 	protected $_metas = array(
 		'table' => array(
 			'tablespace' => array('keyword' => 'TABLESPACE')
-		),
-		'constraint' => array(
-			'primary' => array('template' => 'PRIMARY KEY ({:column})'),
-			'foreign_key' => array(
-				'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
-			),
-			'unique' => array(
-				'template' => 'UNIQUE {:index} ({:column})',
-				'key' => 'KEY',
-				'index' => 'INDEX'
-			),
-			'check' => array('template' => 'CHECK ({:expr})')
 		)
+	);
+	/**
+	 * Column contraints
+	 *
+	 * @var array
+	 */
+	protected $_constraints = array(
+		'primary' => array('template' => 'PRIMARY KEY ({:column})'),
+		'foreign_key' => array(
+			'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
+		),
+		'unique' => array(
+			'template' => 'UNIQUE {:index} ({:column})',
+			'key' => 'KEY',
+			'index' => 'INDEX'
+		),
+		'check' => array('template' => 'CHECK ({:expr})')
 	);
 
 	/**
-	 * Helper for `DatabaseSchema::buildColumn()`
+	 * Helper for `DatabaseSchema::_column()`
 	 *
 	 * @param array $field A field array
 	 * @return string SQL column string
