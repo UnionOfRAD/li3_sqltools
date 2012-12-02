@@ -73,7 +73,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'index' => true
 		);
 		$result = $this->dbmock->invokeMethod('_constraint', array('unique', $data));
-		$expected = 'UNIQUE INDEX ("id", "name")';
+		$expected = 'UNIQUE ("id", "name")';
 		$this->assertEqual($expected, $result);
 	}
 

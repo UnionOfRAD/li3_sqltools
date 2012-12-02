@@ -61,7 +61,9 @@ trait DatabaseSchema {
 			switch($name){
 				case 'key':
 				case 'index':
-					$data[$name] = isset($meta[$name]) ? $meta[$name] : '';
+					if (isset($meta[$name])) {
+						$data['index'] = $meta[$name];
+					}
 					break;
 				case 'to':
 					$data[$name] = $this->name($value);
@@ -97,19 +99,17 @@ trait DatabaseSchema {
 	/**
 	 * Create a database-native schema
 	 *
-	 * @param string $source A table name.
+	 * @param string $name A table name.
 	 * @param object $schema A `Schema` instance.
 	 * @return boolean `true` on success, `true` otherwise
 	 */
 	public function createSchema($source, $schema) {
-		$class = $this->_classes['schema'];
 
-		if (!$schema instanceof $class) {
+		if (!$schema instanceof $this->_classes['schema']) {
 			throw new InvalidArgumentException("Passed schema is not a valid `{$class}` instance.");
 		}
 
-		$columns = $indexes = array();
-		$tableMetas = '';
+		$columns = array();
 		$primary = null;
 
 		$source = $this->name($source);
@@ -187,13 +187,14 @@ trait DatabaseSchema {
 	/**
 	 * Drop a table
 	 *
-	 * @param string $source The table name to drop.
+	 * @param string $name The table name to drop.
 	 * @param boolean $soft With "soft dropping", the function will retrun `true` even if the
 	 *                table doesn't exists.
 	 * @return boolean `true` on success, `false` otherwise
 	 */
 	public function dropSchema($source, $soft = true) {
-		if ($source = $this->name($source)) {
+		if ($source) {
+			$source = $this->name($source);
 			$exists = $soft ? 'IF EXISTS ' : '';
 			return $this->_execute($this->renderCommand('drop', compact('exists', 'source')));
 		}

@@ -78,9 +78,7 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 			'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
 		),
 		'unique' => array(
-			'template' => 'UNIQUE {:index} ({:column})',
-			'key' => 'KEY',
-			'index' => 'INDEX'
+			'template' => 'UNIQUE {:index} ({:column})'
 		),
 		'check' => array('template' => 'CHECK ({:expr})')
 	);

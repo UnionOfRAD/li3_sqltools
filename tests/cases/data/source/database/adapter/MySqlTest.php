@@ -97,6 +97,15 @@ class MySqlTest extends \lithium\test\Unit {
 		$result = $this->dbmock->invokeMethod('_constraint', array('unique', $data));
 		$expected = 'UNIQUE INDEX (`id`, `name`)';
 		$this->assertEqual($expected, $result);
+
+		$data = array(
+			'column' => array('id', 'name'),
+			'index' => true,
+			'key' => true
+		);
+		$result = $this->dbmock->invokeMethod('_constraint', array('unique', $data));
+		$expected = 'UNIQUE KEY (`id`, `name`)';
+		$this->assertEqual($expected, $result);
 	}
 
 	public function testCheckConstraint() {

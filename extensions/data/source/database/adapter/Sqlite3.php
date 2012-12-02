@@ -75,9 +75,7 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 			'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
 		),
 		'unique' => array(
-			'template' => 'UNIQUE {:index} ({:column})',
-			'key' => 'KEY',
-			'index' => 'INDEX'
+			'template' => 'UNIQUE {:index} ({:column})'
 		),
 		'check' => array('template' => 'CHECK ({:expr})')
 	);
