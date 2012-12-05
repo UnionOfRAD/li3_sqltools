@@ -48,7 +48,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 		'text' => array('use' => 'text'),
 		'integer' => array('use' => 'int', 'length' => 11, 'formatter' => 'intval'),
 		'float' => array('use' => 'float', 'formatter' => 'floatval'),
-		'datetime' => array('use' => 'timestamp', 'format' => 'Y-m-d H:i:s', 'formatter' => 'date'),
+		'datetime' => array('use' => 'datetime', 'format' => 'Y-m-d H:i:s', 'formatter' => 'date'),
 		'time' => array('use' => 'time', 'format' => 'H:i:s', 'formatter' => 'date'),
 		'date' => array('use' => 'date', 'format' => 'Y-m-d', 'formatter' => 'date'),
 		'binary' => array('use' => 'blob'),
@@ -109,11 +109,11 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 		$allowPrecision = preg_match('/^(decimal|float|double|real|numeric)$/',$use);
 		$precision = ($precision && $allowPrecision) ? ",{$precision}" : '';
 
-		if ($length && ($allowPrecision || preg_match('/(char|binary|int|year|timestamp)/',$use))) {
+		if ($length && ($allowPrecision || preg_match('/(char|binary|int|year)/',$use))) {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_metas('column', $field, array('charset', 'collate'));
+		$out .= $this->_buildMetas('column', $field, array('charset', 'collate'));
 
 		if ($key === 'primary' && $use === 'int' && $increment) {
 			$out .= ' NOT NULL AUTO_INCREMENT';
@@ -122,7 +122,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 			$out .= $default ? ' DEFAULT ' . $this->value($default, $field) : '';
 		}
 
-		return $out . $this->_metas('column', $field, array('comment'));
+		return $out . $this->_buildMetas('column', $field, array('comment'));
 	}
 }
 

@@ -119,14 +119,14 @@ trait DatabaseSchema {
 			if (isset($field['key']) && $field['key'] === 'primary') {
 				$primary = $name;
 			}
-			$columns[] = $this->_column($field);
+			$columns[] = $this->column($field);
 		}
 		$columns = join(",\n", array_filter($columns));
 
 		$metas = $schema->meta() + array('table' => array(), 'constraints' => array());
 
-		$constraints = $this->_constraints($metas['constraints'], $schema, ",\n", $primary);
-		$table = $this->_metas('table', $metas['table']);
+		$constraints = $this->_buildConstraints($metas['constraints'], $schema, ",\n", $primary);
+		$table = $this->_buildMetas('table', $metas['table']);
 
 		$params = compact('source', 'columns', 'constraints', 'table');
 		return $this->_execute($this->renderCommand('schema', $params));
@@ -143,7 +143,7 @@ trait DatabaseSchema {
 	 * @param type $joiner The join character
 	 * @return string The SQL constraints
 	 */
-	protected function _metas($type, array $metas, $names = null, $joiner = ' ') {
+	protected function _buildMetas($type, array $metas, $names = null, $joiner = ' ') {
 		$result = '';
 		$names = $names ? (array) $names : array_keys($metas);
 		foreach ($names as $name) {
@@ -165,7 +165,7 @@ trait DatabaseSchema {
 	 * @param type $joiner The join character
 	 * @return string The SQL constraints
 	 */
-	protected function _constraints(array $constraints, $schema = null, $joiner = ' ', $primary = false) {
+	protected function _buildconstraints(array $constraints, $schema = null, $joiner = ' ', $primary = false) {
 		$result = '';
 		foreach($constraints as $constraint) {
 			if (isset($constraint['type'])) {
@@ -209,7 +209,7 @@ trait DatabaseSchema {
 	 *        be `'default'`, `'null'`, `'length'`, `'key'` or `'precision'`.
 	 * @return string SQL string
 	 */
-	protected function _column($field) {
+	public function column($field) {
 		if (!isset($field['type'])) {
 			$field['type'] = 'string';
 		}

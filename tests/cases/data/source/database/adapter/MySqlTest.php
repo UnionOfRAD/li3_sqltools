@@ -153,12 +153,12 @@ class MySqlTest extends \lithium\test\Unit {
 			'null' => true,
 			'comment' => 'test'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '`fieldname` varchar(32) NULL COMMENT \'test\'';
 		$this->assertEqual($expected, $result);
 
 		$data['precision'] = 2;
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$this->assertEqual($expected, $result);
 
 		$data = array(
@@ -168,12 +168,12 @@ class MySqlTest extends \lithium\test\Unit {
 			'default' => 'default value'
 		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '`fieldname` varchar(32) DEFAULT \'default value\'';
 		$this->assertEqual($expected, $result);
 
 		$data['null'] = false;
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '`fieldname` varchar(32) NOT NULL DEFAULT \'default value\'';
 		$this->assertEqual($expected, $result);
 
@@ -185,7 +185,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'charset' => 'utf8',
 			'collate' => 'utf8_unicode_ci'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '`fieldname` varchar(32) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL';
 		$this->assertEqual($expected, $result);
 	}
@@ -196,12 +196,12 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'float',
 			'length' => 10
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` float(10)";
 		$this->assertEqual($expected, $result);
 
 		$data['precision'] = 2;
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` decimal(10,2)";
 		$this->assertEqual($expected, $result);
 	}
@@ -212,7 +212,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'text',
 			'default' => 'value'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` text DEFAULT 'value'";
 		$this->assertEqual($expected, $result);
 
@@ -221,7 +221,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'text',
 			'default' => null
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` text";
 		$this->assertEqual($expected, $result);
 	}
@@ -234,8 +234,8 @@ class MySqlTest extends \lithium\test\Unit {
 			'null' => false
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
-		$expected = '`created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP';
+		$result = $this->dbmock->column($data);
+		$expected = '`created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP';
 		$this->assertEqual($expected, $result);
 
 		$data = array(
@@ -243,8 +243,8 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'datetime',
 			'default' => (object) 'CURRENT_TIMESTAMP'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
-		$expected = '`created` timestamp DEFAULT CURRENT_TIMESTAMP';
+		$result = $this->dbmock->column($data);
+		$expected = '`created` datetime DEFAULT CURRENT_TIMESTAMP';
 		$this->assertEqual($expected, $result);
 
 		$data = array(
@@ -252,8 +252,8 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'datetime',
 			'null' => true
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
-		$expected = '`modified` timestamp NULL';
+		$result = $this->dbmock->column($data);
+		$expected = '`modified` datetime NULL';
 		$this->assertEqual($expected, $result);
 	}
 
@@ -263,7 +263,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'date'
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '`created` date';
 		$this->assertEqual($expected, $result);
 	}
@@ -274,7 +274,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'time'
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '`created` time';
 		$this->assertEqual($expected, $result);
 	}
@@ -285,7 +285,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'boolean'
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '`bool` tinyint(1)';
 		$this->assertEqual($expected, $result);
 	}
@@ -296,7 +296,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'binary'
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '`raw` blob';
 		$this->assertEqual($expected, $result);
 	}
@@ -308,7 +308,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'length' => 11,
 			'default' => 1
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` int(11) DEFAULT 1";
 		$this->assertEqual($expected, $result);
 
@@ -318,7 +318,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'length' => 11,
 			'default' => '1'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` int(11) DEFAULT 1";
 		$this->assertEqual($expected, $result);
 
@@ -328,7 +328,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'length' => 64,
 			'default' => 1
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` varchar(64) DEFAULT '1'";
 		$this->assertEqual($expected, $result);
 
@@ -337,7 +337,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'type' => 'text',
 			'default' => 15
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` text DEFAULT '15'";
 		$this->assertEqual($expected, $result);
 	}
@@ -349,7 +349,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'null' => true
 		);
 		$this->expectException('Column type `badtype` does not exist.');
-		$this->dbmock->invokeMethod('_column', array($data));
+		$this->dbmock->column($data);
 	}
 
 	public function testOverrideType() {
@@ -360,7 +360,7 @@ class MySqlTest extends \lithium\test\Unit {
 			'length' => 11,
 			'precision' => 2
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = "`fieldname` decimal(11,2)";
 		$this->assertEqual($expected, $result);
 	}
@@ -429,7 +429,7 @@ class MySqlTest extends \lithium\test\Unit {
 		$expected = 'CREATE TABLE `test_table` (' . "\n";
 		$expected .= '`id` int(11) NOT NULL AUTO_INCREMENT,' . "\n";
 		$expected .= '`table_id` int(11),' . "\n";
-		$expected .= '`published` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,' . "\n";
+		$expected .= '`published` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,' . "\n";
 		$expected .= '`decimal` decimal(10,2),'."\n";
 		$expected .= '`integer` numeric(10,2),' . "\n";
 		$expected .= '`date` date NOT NULL,' . "\n";

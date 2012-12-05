@@ -101,7 +101,7 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_metas('column', $field, array('collate'));
+		$out .= $this->_buildMetas('column', $field, array('collate'));
 
 		if ($key !== 'primary' || $type !== 'integer') {
 			$out .= is_bool($null) ? ($null ? ' NULL' : ' NOT NULL') : '' ;

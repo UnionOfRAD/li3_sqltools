@@ -122,12 +122,12 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'null' => true,
 			'comment' => 'test'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" varchar(32) NULL';
 		$this->assertEqual($expected, $result);
 
 		$data['precision'] = 2;
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$this->assertEqual($expected, $result);
 
 		$data = array(
@@ -137,12 +137,12 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'default' => 'default value'
 		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" varchar(32) DEFAULT \'default value\'';
 		$this->assertEqual($expected, $result);
 
 		$data['null'] = false;
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" varchar(32) NOT NULL DEFAULT \'default value\'';
 		$this->assertEqual($expected, $result);
 	}
@@ -153,12 +153,12 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'float',
 			'length' => 10
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" real';
 		$this->assertEqual($expected, $result);
 
 		$data['precision'] = 2;
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" numeric(10,2)';
 		$this->assertEqual($expected, $result);
 	}
@@ -169,7 +169,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'text',
 			'default' => 'value'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" text DEFAULT \'value\'';
 		$this->assertEqual($expected, $result);
 
@@ -178,7 +178,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'text',
 			'default' => null
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" text';
 		$this->assertEqual($expected, $result);
 	}
@@ -191,7 +191,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'null' => false
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"created" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP';
 		$this->assertEqual($expected, $result);
 
@@ -200,7 +200,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'datetime',
 			'default' => (object) 'CURRENT_TIMESTAMP'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"created" timestamp DEFAULT CURRENT_TIMESTAMP';
 		$this->assertEqual($expected, $result);
 
@@ -209,7 +209,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'datetime',
 			'null' => true
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"modified" timestamp NULL';
 		$this->assertEqual($expected, $result);
 	}
@@ -220,7 +220,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'date'
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"created" date';
 		$this->assertEqual($expected, $result);
 	}
@@ -231,7 +231,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'time'
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"created" time';
 		$this->assertEqual($expected, $result);
 	}
@@ -242,7 +242,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'boolean'
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"bool" boolean';
 		$this->assertEqual($expected, $result);
 	}
@@ -253,7 +253,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'binary'
  		);
 
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"raw" bytea';
 		$this->assertEqual($expected, $result);
 	}
@@ -265,7 +265,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'length' => 11,
 			'default' => 1
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" integer DEFAULT 1';
 		$this->assertEqual($expected, $result);
 
@@ -275,7 +275,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'length' => 11,
 			'default' => '1'
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" integer DEFAULT 1';
 		$this->assertEqual($expected, $result);
 
@@ -285,7 +285,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'length' => 64,
 			'default' => 1
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" varchar(64) DEFAULT \'1\'';
 		$this->assertEqual($expected, $result);
 
@@ -294,7 +294,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'type' => 'text',
 			'default' => 15
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" text DEFAULT \'15\'';
 		$this->assertEqual($expected, $result);
 	}
@@ -306,7 +306,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'null' => true
 		);
 		$this->expectException('Column type `badtype` does not exist.');
-		$this->dbmock->invokeMethod('_column', array($data));
+		$this->dbmock->column($data);
 	}
 
 	public function testOverrideType() {
@@ -317,7 +317,7 @@ class PostgreSqlTest extends \lithium\test\Unit {
 			'length' => 11,
 			'precision' => 2
 		);
-		$result = $this->dbmock->invokeMethod('_column', array($data));
+		$result = $this->dbmock->column($data);
 		$expected = '"fieldname" numeric(11,2)';
 		$this->assertEqual($expected, $result);
 	}
