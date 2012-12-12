@@ -6,9 +6,9 @@
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
-namespace li3_sqltools\extensions\data\source\database\adapter;
+namespace li3_sqltools\extensions\adapter\data\source\database;
 
-use li3_sqltools\extensions\data\source\DatabaseSchema;
+use li3_sqltools\extensions\adapter\data\source\DatabaseSchema;
 
 /**
  * Extends the `Database` class to implement the necessary SQL-formatting and resultset-fetching

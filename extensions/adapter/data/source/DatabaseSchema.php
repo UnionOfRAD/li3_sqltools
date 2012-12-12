@@ -6,7 +6,7 @@
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
-namespace li3_sqltools\extensions\data\source;
+namespace li3_sqltools\extensions\adapter\data\source;
 
 use lithium\util\String;
 use lithium\data\model\Query;

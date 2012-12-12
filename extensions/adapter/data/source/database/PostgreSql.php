@@ -2,21 +2,23 @@
 /**
  * Lithium: the most rad php framework
  *
- * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
- * @license       http://opensource.org/licenses/bsd-license.php The BSD License
- *
+ * @copyright	  Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @license		  http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
-namespace li3_sqltools\extensions\data\source\database\adapter;
+namespace li3_sqltools\extensions\adapter\data\source\database;
 
-use li3_sqltools\extensions\data\source\DatabaseSchema;
+use li3_sqltools\extensions\adapter\data\source\DatabaseSchema;
 
 /**
- * Sqlite database driver
+ * Extends the `Database` class to implement the necessary SQL-formatting and resultset-fetching
+ * features for working with PostgreSQL databases.
  *
- * @todo fix encoding methods to use class query methods instead of sqlite3 natives
+ * For more information on configuring the database connection, see the `__construct()` method.
+ *
+ * @see lithium\data\source\database\adapter\PostgreSql::__construct()
  */
-class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
+class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 
 	use DatabaseSchema;
 
@@ -36,32 +38,33 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 	);
 
 	/**
-	 * Sqlite3 column type definitions.
+	 * PostgreSQL column type definitions.
 	 *
 	 * @var array
 	 */
 	protected $_columns = array(
-		'primary' => array('use' => 'integer'),
-		'string' => array('use' => 'text', 'length' => 255),
+		'primary' => array('use' => 'integer', 'increment' => true),
+		'string' => array('use' => 'varchar', 'length' => 255),
 		'text' => array('use' => 'text'),
 		'integer' => array('use' => 'integer', 'formatter' => 'intval'),
 		'float' => array('use' => 'real', 'formatter' => 'floatval'),
-		'datetime' => array('use' => 'numeric', 'format' => 'Y-m-d H:i:s', 'formatter' => 'date'),
-		'time' => array('use' => 'numeric', 'format' => 'H:i:s', 'formatter' => 'date'),
-		'date' => array('use' => 'numeric', 'format' => 'Y-m-d', 'formatter' => 'date'),
-		'binary' => array('use' => 'blob'),
-		'boolean' => array('use' => 'numeric', 'length' => 1)
+		'datetime' => array('use' => 'timestamp', 'format' => 'Y-m-d H:i:s', 'formatter' => 'date'),
+		'time' => array('use' => 'time', 'format' => 'H:i:s', 'formatter' => 'date'),
+		'date' => array('use' => 'date', 'format' => 'Y-m-d', 'formatter' => 'date'),
+		'binary' => array('use' => 'bytea'),
+		'boolean' => array('use' => 'boolean'),
+		'inet' => array('use' => 'inet')
 	);
 
 	/**
-	 * Column specific metas used on table creating
-	 * By default `'quote'` is false and 'join' is `' '`
+	 * Column/table metas
+	 * By default `'escape'` is false and 'join' is `' '`
 	 *
 	 * @var array
 	 */
 	protected $_metas = array(
-		'column' => array(
-			'collate' => array('keyword' => 'COLLATE', 'escape' => true)
+		'table' => array(
+			'tablespace' => array('keyword' => 'TABLESPACE')
 		)
 	);
 	/**
@@ -92,18 +95,21 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 			$use = 'numeric';
 		}
 
-		$out = $this->name($name) . ' ' . $use;
-
-		$allowPrecision = preg_match('/^(integer|real|numeric)$/',$use);
-		$precision = ($precision && $allowPrecision) ? ",{$precision}" : '';
-
-		if ($length && ($allowPrecision || $use === 'text')) {
-			$out .= "({$length}{$precision})";
+		if ($precision) {
+			$precision = $use === 'numeric' ? ",{$precision}" : '';
 		}
 
-		$out .= $this->_buildMetas('column', $field, array('collate'));
+		$out = $this->name($name);
 
-		if ($key !== 'primary' || $type !== 'integer') {
+		if ($key === 'primary' && $type === 'integer' && $increment) {
+			$out .= ' serial NOT NULL';
+		} else {
+			$out .= ' ' . $use;
+
+			if ($length && preg_match('/char|numeric|interval|bit|time/',$use)) {
+				$out .= "({$length}{$precision})";
+			}
+
 			$out .= is_bool($null) ? ($null ? ' NULL' : ' NOT NULL') : '' ;
 			$out .= $default ? ' DEFAULT ' . $this->value($default, $field) : '';
 		}
