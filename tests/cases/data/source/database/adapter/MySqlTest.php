@@ -368,7 +368,7 @@ class MySqlTest extends \lithium\test\Unit {
 	public function testCreateSchema() {
 		$schema = new Schema(array(
 			'fields' => array(
-				'id' => array('type' => 'integer', 'key' => 'primary'),
+				'id' => array('type' => 'id'),
 				'table_id' => array('type' => 'integer'),
 				'published' => array(
 					'type' => 'datetime',

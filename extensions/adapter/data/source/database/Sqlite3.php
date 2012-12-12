@@ -41,7 +41,7 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 	 * @var array
 	 */
 	protected $_columns = array(
-		'primary' => array('use' => 'integer'),
+		'id' => array('use' => 'integer'),
 		'string' => array('use' => 'text', 'length' => 255),
 		'text' => array('use' => 'text'),
 		'integer' => array('use' => 'integer', 'formatter' => 'intval'),
@@ -103,7 +103,7 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 
 		$out .= $this->_buildMetas('column', $field, array('collate'));
 
-		if ($key !== 'primary' || $type !== 'integer') {
+		if ($type !== 'id') {
 			$out .= is_bool($null) ? ($null ? ' NULL' : ' NOT NULL') : '' ;
 			$out .= $default ? ' DEFAULT ' . $this->value($default, $field) : '';
 		}

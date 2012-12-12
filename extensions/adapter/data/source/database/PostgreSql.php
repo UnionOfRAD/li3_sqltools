@@ -43,7 +43,7 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 	 * @var array
 	 */
 	protected $_columns = array(
-		'primary' => array('use' => 'integer', 'increment' => true),
+		'id' => array('use' => 'integer', 'increment' => true),
 		'string' => array('use' => 'varchar', 'length' => 255),
 		'text' => array('use' => 'text'),
 		'integer' => array('use' => 'integer', 'formatter' => 'intval'),
@@ -101,7 +101,7 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 
 		$out = $this->name($name);
 
-		if ($key === 'primary' && $type === 'integer' && $increment) {
+		if (isset($increment) && $increment) {
 			$out .= ' serial NOT NULL';
 		} else {
 			$out .= ' ' . $use;

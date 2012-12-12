@@ -43,7 +43,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 	 * @var array
 	 */
 	protected $_columns = array(
-		'primary' => array('use' => 'int', 'length' => 11, 'increment' => true),
+		'id' => array('use' => 'int', 'length' => 11, 'increment' => true),
 		'string' => array('use' => 'varchar', 'length' => 255),
 		'text' => array('use' => 'text'),
 		'integer' => array('use' => 'int', 'length' => 11, 'formatter' => 'intval'),
@@ -115,7 +115,7 @@ class MySql extends \lithium\data\source\database\adapter\MySql {
 
 		$out .= $this->_buildMetas('column', $field, array('charset', 'collate'));
 
-		if ($key === 'primary' && $use === 'int' && $increment) {
+		if (isset($increment) && $increment) {
 			$out .= ' NOT NULL AUTO_INCREMENT';
 		} else {
 			$out .= is_bool($null) ? ($null ? ' NULL' : ' NOT NULL') : '' ;

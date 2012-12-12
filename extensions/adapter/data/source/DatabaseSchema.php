@@ -116,7 +116,7 @@ trait DatabaseSchema {
 
 		foreach ($schema->fields() as $name => $field) {
 			$field['name'] = $name;
-			if (isset($field['key']) && $field['key'] === 'primary') {
+			if ($field['type'] === 'id') {
 				$primary = $name;
 			}
 			$columns[] = $this->column($field);
@@ -206,7 +206,7 @@ trait DatabaseSchema {
 	 *
 	 * @param array $column A field array structured like the following:
 	 *        `array('name' => 'value', 'type' => 'value' [, options])`, where options can
-	 *        be `'default'`, `'null'`, `'length'`, `'key'` or `'precision'`.
+	 *        be `'default'`, `'null'`, `'length'` or `'precision'`.
 	 * @return string SQL string
 	 */
 	public function column($field) {
@@ -224,13 +224,8 @@ trait DatabaseSchema {
 
 		$field += $this->_columns[$field['type']];
 
-		if (isset($field['key'])) {
-			$field += $this->_columns[$field['key']];
-		}
-
 		$field += array(
 			'name' => null,
-			'key' => null,
 			'type' => null,
 			'length' => null,
 			'precision' => null,
