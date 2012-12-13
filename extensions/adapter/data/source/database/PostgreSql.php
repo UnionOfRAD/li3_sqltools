@@ -84,6 +84,28 @@ class PostgreSql extends \lithium\data\source\database\adapter\PostgreSql {
 	);
 
 	/**
+	 * Check for required PHP extension, or supported database feature.
+	 *
+	 * @param string $feature Test for support for a specific feature, i.e. `"transactions"` or
+	 *        `"arrays"`.
+	 * @return boolean Returns `true` if the particular feature (or if PostgreSQL) support is
+	 *         enabled, otherwise `false`.
+	 */
+	public static function enabled($feature = null) {
+		if (!$feature) {
+			return extension_loaded('pdo_pgsql');
+		}
+		$features = array(
+			'arrays' => false,
+			'transactions' => true,
+			'booleans' => true,
+			'schema' => true,
+			'relationships' => true
+		);
+		return isset($features[$feature]) ? $features[$feature] : null;
+	}
+
+	/**
 	 * Helper for `DatabaseSchema::_column()`
 	 *
 	 * @param array $field A field array

@@ -23,7 +23,11 @@ class Sqlite3Test extends \lithium\test\Unit {
 		$this->dbmock = new $mock();
 	}
 
-
+	public function testSchemaEnabled() {
+		$adapter = $this->dbmock;
+		$this->assertTrue($adapter::enabled('schema'));
+	}
+	
 	public function testColumnMeta() {
 		$data = array('collate' => 'NOCASE');
 		$result = array();

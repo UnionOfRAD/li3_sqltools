@@ -81,6 +81,27 @@ class Sqlite3 extends \lithium\data\source\database\adapter\Sqlite3 {
 	);
 
 	/**
+	 * Check for required PHP extension, or supported database feature.
+	 *
+	 * @param string $feature Test for support for a specific feature, i.e. `'transactions'`.
+	 * @return boolean Returns `true` if the particular feature (or if Sqlite) support is enabled,
+	 *         otherwise `false`.
+	 */
+	public static function enabled($feature = null) {
+		if (!$feature) {
+			return extension_loaded('pdo_sqlite');
+		}
+		$features = array(
+			'arrays' => false,
+			'transactions' => false,
+			'booleans' => true,
+			'schema' => true,
+			'relationships' => true
+		);
+		return isset($features[$feature]) ? $features[$feature] : null;
+	}
+
+	/**
 	 * Helper for `DatabaseSchema::_column()`
 	 *
 	 * @param array $field A field array

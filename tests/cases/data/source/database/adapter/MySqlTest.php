@@ -23,6 +23,11 @@ class MySqlTest extends \lithium\test\Unit {
 		$this->dbmock = new $mock();
 	}
 
+	public function testSchemaEnabled() {
+		$adapter = $this->dbmock;
+		$this->assertTrue($adapter::enabled('schema'));
+	}
+
 	public function testTableMeta() {
 		$data = array(
 			'charset' => 'utf8',
