@@ -28,10 +28,10 @@ Simple schema creation:
 ```php
 $db = Connections::get('default');
 $db->createSchema('mytable', new Schema(array(
-	fields' => array(
+	'fields' => array(
 		'id' => array('type' => 'id'),
 		'name' => array('type' => 'string')
-	),
+	)
 )));
 ```
 A more complexe example with constraints:
