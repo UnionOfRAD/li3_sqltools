@@ -85,3 +85,6 @@ Example of dropping a schema:
 $db = Connections::get('default');
 $db->dropSchema('mytable');
 ```
+
+## Build status
+[![Build Status](https://secure.travis-ci.org/UnionOfRAD/li3_sqltools.png?branch=master)](http://travis-ci.org/UnionOfRAD/li3_sqltools)
